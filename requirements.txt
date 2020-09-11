@@ -1,0 +1,4 @@
+pyyaml
+notebook
+pomegranate
+matplotlib
