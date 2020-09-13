@@ -29,7 +29,6 @@ def mfc_table(emission_path, data):
     df.drop(columns=["Count"], inplace=True)
     dct = df.set_index("Word").T.to_dict("Records")[0]
     # seeing as there is one missing added manually to save time.
-    dct["null"] = "NOUN"
     return dct
 
 
