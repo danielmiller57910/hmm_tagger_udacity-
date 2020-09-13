@@ -4,7 +4,9 @@ from pair_count import pair_counts
 from helpers import show_model, Dataset
 import pair_count
 import os
+import pandas as pd
 
+import pdb
 TAG_PATH = os.path.join(os.getcwd(), "tags-universal.txt")
 BROWN_PATH  = os.path.join(os.getcwd(), "brown-universal.txt")
 
@@ -14,22 +16,26 @@ TRAINING_EMISSION_MAX_PATH = os.path.join(os.getcwd(), "training_emission_max.cs
 TRAINING_JSON_MAX_EMISSION_PATH = os.path.join(os.getcwd(), "training_out_emission.json")
 
 FakeState = namedtuple("FakeState", "name")
-
-class MFCTagger:
-    # NOTE: You should not need to modify this class or any of its methods
-    missing = FakeState(name="<MISSING>")
-    
-    def __init__(self, table):
-        self.table = defaultdict(lambda: MFCTagger.missing)
-        self.table.update({word: FakeState(name=tag) for word, tag in table.items()})
-        
-    def viterbi(self, seq):
-        """This method simplifies predictions by matching the Pomegranate viterbi() interface"""
-        return 0., list(enumerate(["<start>"] + [self.table[w] for w in seq] + ["<end>"]))
+def mfc_table(emission_path, data):
+    train_df = pd.read_csv(emission_path, na_filter=False)
+    train_df.drop(columns=["Unnamed: 0"], inplace=True)
+    train_df = train_df.groupby(['Type', 'Word']).size().reset_index(name='Count')
+    df = train_df.iloc[train_df.groupby('Word')['Count'].agg(pd.Series.idxmax)]
+    if len(data.training_set.vocab) != len(df):
+        ancillary_words = pd.DataFrame(data.training_set.vocab)
+        dif = pd.concat([df["Word"],ancillary_words]).drop_duplicates(keep=False)
+        print(f"Difference between two dataframes => {len(data.training_set.vocab) - len(df)}")
+        print(dif.head(50)) 
+    df.drop(columns=["Count"], inplace=True)
+    dct = df.set_index("Word").T.to_dict("Records")[0]
+    # seeing as there is one missing added manually to save time.
+    dct["null"] = "NOUN"
+    return dct
 
 
 data = Dataset(TAG_PATH, BROWN_PATH, train_test_split=0.8)
-word_counts = pair_counts(
+
+pair_counts(
     data.training_set.vocab,
     data.training_set,
     TRAINING_UNIQUE_WORD_PATH,
@@ -38,4 +44,4 @@ word_counts = pair_counts(
     TRAINING_JSON_MAX_EMISSION_PATH
 )
 
-print(word_counts["NOUN"]["time"])
+mfc_table(TRAINING_ALL_WORD_PATH, data)
