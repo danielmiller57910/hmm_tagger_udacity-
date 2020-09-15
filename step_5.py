@@ -4,44 +4,30 @@ from pomegranate import State, HiddenMarkovModel, DiscreteDistribution
 from helpers import show_model, Dataset
 import pdb
 from pandas import json_normalize
+from word_by_tag import word_by_tag
 
-TRAINING_EMISSION_MAX_PATH = os.path.join(os.getcwd(), "training_emission_max.csv")
 TRAINING_ALL_WORD_PATH = os.path.join(os.getcwd(), "training_all_words.csv")
-
-TAG_PATH = os.path.join(os.getcwd(), "tags-universal.txt")
-BROWN_PATH  = os.path.join(os.getcwd(), "brown-universal.txt")
 TRAINING_WORD_PROBABILITY_MATRIX = os.path.join(os.getcwd(), "training_word_probability_matrix.csv")
 
-all_word = pd.read_csv(TRAINING_ALL_WORD_PATH, index_col=False)
-all_word.drop(columns=['Unnamed: 0'], inplace=True)
-sample = all_word[all_word['Word'] == 'time'].groupby(['Word', 'Type']).size()
-all_word = all_word.groupby(['Word', 'Type']).size()
+if not os.path.exists(TRAINING_WORD_PROBABILITY_MATRIX):
+    word_by_tag(TRAINING_ALL_WORD_PATH, TRAINING_WORD_PROBABILITY_MATRIX)
 
-word_probability_matrix = {}
-i = 0
-for s in all_word.items():
-    word, word_type, count = s[0][0], s[0][1], s[1]
-    if word not in word_probability_matrix:
-        word_probability_matrix[word] = {word_type: count}
-    else:
-        current = word_probability_matrix[word]
-        current[word_type] = count
-        word_probability_matrix[word] = current
+df = pd.read_csv(TRAINING_WORD_PROBABILITY_MATRIX)
+df.drop(columns=['Unnamed: 0', 'SUM'], inplace=True)
+distinct_types = [col for col in df.columns if col not in ['Word', 'SUM']]
 
-insertion_list = []
-for k in word_probability_matrix:
-    current = word_probability_matrix[k]
-    current['Word'] = k
-    insertion_list.append(current)
+unigram_word_hash = {}
 
-res = pd.DataFrame.from_records(insertion_list)
-res.fillna(0, inplace=True)
+for d in distinct_types:
+    sample_df = df[df[d] > 0]
+    unigram_word_hash[d] = sample_df[['Word', d]]
 
-value_columns = [col for col in res.columns if col not in ['Word', 'SUM']]
-res['SUM'] = res[value_columns].sum(axis=1)
 
-for col in value_columns:
-    res[col] = res[col] / res['SUM']
+for k in unigram_word_hash:
+    subset = unigram_word_hash[k]
+    print(f'sum {k} = > {subset[k].sum()}')
+    subset[k] = subset[k] / subset[k].sum()
+    unigram_word_hash[k] = subset
 
-res.to_csv(TRAINING_WORD_PROBABILITY_MATRIX)
-
+tst = unigram_word_hash['NOUN']
+print(tst['NOUN'].sum())
