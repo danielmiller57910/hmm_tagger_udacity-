@@ -37,8 +37,11 @@ for k in word_probability_matrix:
 res = pd.DataFrame.from_records(insertion_list)
 res.fillna(0, inplace=True)
 
-value_columns = [col for col in res.columns if col != 'Word']
+value_columns = [col for col in res.columns if col not in ['Word', 'SUM']]
 res['SUM'] = res[value_columns].sum(axis=1)
-print(res[res['Word'] == 'time'])
+sample = res[res['Word'] == 'time']
+print(sample.columns)
 
+# sample = sample.apply(lambda x: x / x['SUM'] if x.name not in ['Word', 'SUM'] else x, axis=0)
+# sample[sample[value_columns]].divide(sample.SUM, axis=0)
 # res['SUM'] = df[list(df.columns)].sum(axis=1)
