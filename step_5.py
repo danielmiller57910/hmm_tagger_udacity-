@@ -15,13 +15,12 @@ BROWN_PATH  = os.path.join(os.getcwd(), "brown-universal.txt")
 all_word = pd.read_csv(TRAINING_ALL_WORD_PATH, index_col=False)
 all_word.drop(columns=['Unnamed: 0'], inplace=True)
 sample = all_word[all_word['Word'] == 'time'].groupby(['Word', 'Type']).size()
-all_word = all_word.groupby(['Type', 'Word']).size()
+all_word = all_word.groupby(['Word', 'Type']).size()
 
 word_probability_matrix = {}
-
-for s in sample.items():
+i = 0
+for s in all_word.items():
     word, word_type, count = s[0][0], s[0][1], s[1]
-    print(word, word_type, count)
     if word not in word_probability_matrix:
         word_probability_matrix[word] = {word_type: count}
     else:
@@ -29,11 +28,22 @@ for s in sample.items():
         current[word_type] = count
         word_probability_matrix[word] = current
 
-word_probability_list = []
+insertion_list = []
 for k in word_probability_matrix:
-    insertion = word_probability_matrix[k]
-    insertion['Word'] = k
-    word_probability_list.append(insertion)
+    current = word_probability_matrix[k]
+    current['Word'] = k
+    insertion_list.append(current)
 
-res = pd.DataFrame(word_probability_list)
-print(res.head(10))
+res = pd.DataFrame.from_records(insertion_list)
+res.fillna(0, inplace=True)
+print(res[res['Word'] == 'time'])
+print(res.head(50))
+print(res.columns)
+
+
+# j = 0
+# for w in word_probability_list:
+#     print(w)
+#     j+=1
+#     if j > 10:
+#         break
