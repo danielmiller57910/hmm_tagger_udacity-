@@ -36,14 +36,9 @@ for k in word_probability_matrix:
 
 res = pd.DataFrame.from_records(insertion_list)
 res.fillna(0, inplace=True)
+
+value_columns = [col for col in res.columns if col != 'Word']
+res['SUM'] = res[value_columns].sum(axis=1)
 print(res[res['Word'] == 'time'])
-print(res.head(50))
-print(res.columns)
 
-
-# j = 0
-# for w in word_probability_list:
-#     print(w)
-#     j+=1
-#     if j > 10:
-#         break
+# res['SUM'] = df[list(df.columns)].sum(axis=1)
