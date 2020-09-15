@@ -41,7 +41,9 @@ value_columns = [col for col in res.columns if col not in ['Word', 'SUM']]
 res['SUM'] = res[value_columns].sum(axis=1)
 sample = res[res['Word'] == 'time']
 print(sample.columns)
+print(value_columns)
+for col in value_columns:
+    sample[col] = sample[col] / sample['SUM']
 
-# sample = sample.apply(lambda x: x / x['SUM'] if x.name not in ['Word', 'SUM'] else x, axis=0)
-# sample[sample[value_columns]].divide(sample.SUM, axis=0)
+print(sample.head(10))
 # res['SUM'] = df[list(df.columns)].sum(axis=1)
