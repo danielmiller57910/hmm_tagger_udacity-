@@ -18,16 +18,38 @@ distinct_types = [col for col in df.columns if col not in ['Word', 'SUM']]
 
 unigram_word_hash = {}
 
+"""
+Split df based on distinct tags
+"""
 for d in distinct_types:
     sample_df = df[df[d] > 0]
     unigram_word_hash[d] = sample_df[['Word', d]]
 
-
+"""
+P W|T V word in tag
+"""
 for k in unigram_word_hash:
     subset = unigram_word_hash[k]
-    print(f'sum {k} = > {subset[k].sum()}')
     subset[k] = subset[k] / subset[k].sum()
     unigram_word_hash[k] = subset
 
-tst = unigram_word_hash['NOUN']
-print(tst['NOUN'].sum())
+"""
+Assert probability distribution == 1
+"""
+for k in unigram_word_hash:
+    subset = unigram_word_hash[k]
+    print(f'{k} distribution sum => {subset[k].sum()}')
+
+"""
+Create discrete distribution objects
+"""
+state_list = []
+for k in unigram_word_hash:
+    dist = unigram_word_hash[k]
+    # discrete prob {word: P(w|tag)}
+    discrete_dist = DiscreteDistribution(dist.set_index("Word").T.to_dict("Records")[0])
+    state_list.append(State(discrete_dist, name=k))
+
+
+model = HiddenMarkovModel('example')
+model.add_states(state_list)
