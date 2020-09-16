@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from pomegranate import State, HiddenMarkovModel, DiscreteDistribution
+
 def emission_state_list(training_word_prob_path, training_all_word_path):
     if not os.path.exists(training_word_prob_path):
         word_by_tag(training_all_word_path, training_word_prob_path)
@@ -46,3 +47,19 @@ def emission_state_list(training_word_prob_path, training_all_word_path):
         unigram_word_hash[k] = State(discrete_dist, name=k)
     
     return unigram_word_hash
+
+def tag_aggregate_start_end(tag_training_path):
+
+    df = pd.read_csv(tag_training_path)
+    start_frame, end_frame = df.start_type.value_counts(), df.end_type.value_counts()
+    return start_frame.to_dict(), end_frame.to_dict()
+
+def bigram_sequence_probability(bigram_training_path):
+    df = pd.read_csv(bigram_training_path)
+    df.drop(columns=["Unnamed: 0"], inplace=True)
+    print(df.head(50))
+    total_count = df['Count'].sum()
+    df['Count'] = df['Count'] / total_count
+    print(df['Count'].sum())
+    dct = df.set_index("bigram_sequence").T.to_dict("Records")[0]
+    return dct
