@@ -47,14 +47,22 @@ state_list = []
 for k in unigram_word_hash:
     dist = unigram_word_hash[k]
     print(k)
-    # discrete prob {word: P(w|tag)}
-    discrete_dist = DiscreteDistribution(dist.set_index("Word").T.to_dict("Records")[0])
+    dist_dict = dist.set_index("Word").T.to_dict("Records")[0]
+    if k == 'NOUN':
+        print(dist_dict['time'])
+    discrete_dist = DiscreteDistribution(dist_dict)
     state_list.append(State(discrete_dist, name=k))
 
 
+example = state_list[0]
 model = HiddenMarkovModel('example')
-model.add_states(state_list)
+model.add_states(state_list[0])
 model.add_transition(model.start, state_list[0], 1.0)
 model.add_transition(state_list[0], state_list[0], 1.0)
 model.add_transition(state_list[0], model.end, 1.0)
 model.bake()
+
+res = model.viterbi(["!", "!", "!"])
+
+for i, r in res[1]:
+    print(i, r.name)
