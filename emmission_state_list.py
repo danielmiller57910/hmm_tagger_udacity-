@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 from pomegranate import State, HiddenMarkovModel, DiscreteDistribution
-
 def emission_state_list(training_word_prob_path, training_all_word_path):
     if not os.path.exists(training_word_prob_path):
         word_by_tag(training_all_word_path, training_word_prob_path)
