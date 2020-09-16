@@ -46,6 +46,7 @@ Create discrete distribution objects
 state_list = []
 for k in unigram_word_hash:
     dist = unigram_word_hash[k]
+    print(k)
     # discrete prob {word: P(w|tag)}
     discrete_dist = DiscreteDistribution(dist.set_index("Word").T.to_dict("Records")[0])
     state_list.append(State(discrete_dist, name=k))
@@ -53,3 +54,7 @@ for k in unigram_word_hash:
 
 model = HiddenMarkovModel('example')
 model.add_states(state_list)
+model.add_transition(model.start, state_list[0], 1.0)
+model.add_transition(state_list[0], state_list[0], 1.0)
+model.add_transition(state_list[0], model.end, 1.0)
+model.bake()
